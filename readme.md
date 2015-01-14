@@ -35,13 +35,13 @@ download and install your files.
 
 `node app.js -s [Email Subject] -f [HTML Content] -a <attachments>`
 
-Example:
+###Example:
 
 `node app.js -s "Please read my email" -f awesome.html -a joy.jpg,monkey.jpg`
 
-**Important notes**
+###Important notes 
 * A subject line is required
 * The html file is required
-* Multiple attachments must be separated by a comma (not spaces and not comma space)
+* Multiple attachments must be separated by a comma *(not spaces and not comma space)*
 * Attachments are automatically given cid tags without their extension, so
 you can add as many as you'd like and have corresponding cids for the ones you want to use.
