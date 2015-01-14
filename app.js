@@ -44,20 +44,26 @@ console.log('  - With these attachments: %j', program.attach);
 //console.log(' list: %j', program.attach);
 
 db.serialize(function () { // Give ourselves some feedback
-	var recipCount = 0;
-	var getCount = "SELECT COUNT(*) AS runcount FROM maintargets WHERE status = 'go'"
-	db.each(getCount, function (err, row) {
-		recipCount = row.runcount;
-		if (recipCount < 1) {
-			console.log('**** Exiting: No recipients! ****');
-			process.exit(0);
-		}
-		console.log('To %s recipients', recipCount);
-		for (var i = 5; i >= 0; i--) {
-		    sleep.sleep(1)
-		    console.log('In %s seconds — press ctrl-c to cancel!', i);
-		};
-	});
+    var recipCount = 0;
+    var getCount = "SELECT COUNT(*) AS runcount FROM maintargets WHERE status = 'go'"
+    db.each(getCount, function (err, row) {
+        recipCount = row.runcount;
+        if (recipCount < 1) {
+            console.log('**** Exiting: No recipients! ****');
+            process.exit(0);
+        }
+        else if (recipCount == 1) {
+            console.log("To %s recipient", recipCount)
+        }
+        else {
+            console.log('To %s recipients', recipCount);    
+        }
+        
+        for (var i = 5; i >= 0; i--) {
+            sleep.sleep(1)
+            console.log('In %s seconds — press ctrl-c to cancel!', i);
+        };
+    });
 });
 
 var attachmentList = program.attach;
@@ -82,11 +88,11 @@ var transporter = nodemailer.createTransport(smtpTransport({
 
 function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
     var mailOptions = {
-        from: 'Micah Cooper <coopermj@miamioh.edu>', // sender address
+        from: 'Firstname Lastname <addr@domain.edu>', // sender address
         to: util.format("%s %s <%s>", name, lastname, emailAddr), // list of receivers
         //to: emailAddr,
         subject: program.subject, // Subject line
-        text: 'More info on the progress of the new Change Management process. To view in a browser, please visit http://www.users.miamioh.edu/coopermj/cm4.html', // plaintext body
+        text: 'Where you put the plaintext body', // plaintext body
         //html: '<b>Hello world ✔</b>' // html body
         html: data,
         //html: '<p><b> hellow, world </b> Here is a graphic: <img src="cid:grasschat"/></p>',
@@ -98,8 +104,8 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
     	var date = new Date();
         if(error){
             console.log(error);
-            //var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")	
-            //stmt.run(date, runNo, info.envelope.to, 0, error);
+            var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")   
+            stmt.run(date, runNo, mailOptions['to'], error.responseCode, error.response);
         }else{
         	var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")	
         	stmt.run(date, runNo, mailOptions['to'], 200, info.response);
