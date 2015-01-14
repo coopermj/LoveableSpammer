@@ -1,0 +1,18 @@
+{
+  "private": "true",
+  "name": "nodepad",
+  "description": "A notepad written with Node",
+  "version": "0.1.1",
+  "homepage": "http://dailyjs.com",
+  "author": {
+    "name": "Alex R. Young",
+    "url": "http://alexyoung.org"
+  },
+  "dependencies": {
+    "commander": "^2.6.0",
+    "nodemailer": "*",
+    "nodemailer-smtp-transport": "*",
+    "sleep": "^1.2.0",
+    "sqlite3": "*"
+  }
+}
