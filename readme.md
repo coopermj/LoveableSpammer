@@ -15,6 +15,8 @@ your email in your favorite html utility, OR start with [MailChimp's excellent b
 which you can do with a
 `git clone https://github.com/mailchimp/email-blueprints`
 2. Create a sqlite database file named uit.db with the following schema:
+
+```
   CREATE TABLE maintargets
   (name VARCHAR(255),
   lastname varchar(255),
@@ -22,6 +24,8 @@ which you can do with a
   dept VARCHAR(255),
   bldg VARCHAR(255),
   status VARCHAR(25) default 'no');
+```
+
 3. Create a csv with corresponding columns (you can leave some blank) and follow
 [these steps](http://www.sqlite.org/cli.html) to import it into your db.
 4. Before you use LS for the first time, you'll need to run `npm install` to
