@@ -32,8 +32,12 @@ which you can do with a
 download and install your files.
 
 ## Usage
+
 `node app.js -s [Email Subject] -f [HTML Content] -a <attachments>`
-eg: `node app.js -s "Please read my email" -f awesome.html -a joy.jpg,monkey.jpg`
+
+Example:
+
+`node app.js -s "Please read my email" -f awesome.html -a joy.jpg,monkey.jpg`
 
 **Important notes**
 * A subject line is required
