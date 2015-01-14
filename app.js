@@ -109,15 +109,17 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
         }else{
         	var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")	
         	stmt.run(date, runNo, mailOptions['to'], 200, info.response);
-        	if (mailOptions['to'] == mailOptions['from']) { // make it so I don't have to keep re-enabling myself
-        		console.log("Sending email to yourself, j0!")
-        	}
-        	else {
-        		var stmtUpdate = db.prepare("UPDATE maintargets SET status='no' WHERE emailaddr=?")
-        		stmtUpdate.run(mailOptions['to'])	
-        	}
-        	
-            console.log('Message to ' + info.envelope.to + ' sent: ' + info.response);	        
+            
+        	if (mailOptions['to'].toUpperCase() === mailOptions['from'].toUpperCase()) { // make it so I don't have to keep re-enabling myself
+                console.log("Sending email to yourself, j0!")
+            }
+            else { 
+                console.log("to: %s; from: %s", mailOptions['to'].toUpperCase(), mailOptions['from'].toUpperCase());
+                var stmtUpdate = db.prepare("UPDATE maintargets SET status='no' WHERE name=? AND lastname=?")
+                stmtUpdate.run(name,lastname)   
+            }
+
+            console.log('Message to ' + info.envelope.to + ' sent: ' + info.response);  	        
         }
     });
 }
