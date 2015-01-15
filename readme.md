@@ -45,3 +45,7 @@ download and install your files.
 * Multiple attachments must be separated by a comma *(not spaces and not comma space)*
 * Attachments are automatically given cid tags without their extension, so
 you can add as many as you'd like and have corresponding cids for the ones you want to use.
+
+### Tokens ###
+
+In your HTML file, you can use the following tokens and they will be replaced with text from your database: {{name}}, {{last name}}, {{bldg}}, {{dept}}. If you look at the code, you can see that adding or changing tokens should be straightforward.
