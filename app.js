@@ -8,12 +8,20 @@ var sleep = require('sleep');
 var path = require('path')
 var premailer = require('premailer-api') // this should inline our css automatically
 var htmlToText = require('nodemailer-html-to-text').htmlToText;
+yaml = require('js-yaml');
 
 var db = new sqlite3.Database('uit.db');
 
 
 function attach(val) {
   return val.split(',');
+}
+
+try {
+    var ymlconfig = yaml.safeLoad(fs.readFileSync('config.yml', 'utf8'));
+    //console.log(ymlconfig);
+} catch (e) {
+    console.log(e);
 }
 
 program
@@ -95,8 +103,8 @@ console.log('ao: %j', attachmentObject)
 
 // create reusable transporter object using SMTP transport
 var transporter = nodemailer.createTransport(smtpTransport({
-    host: 'mailfwd.miamioh.edu',
-    port: 25
+    host: ymlconfig['host'],
+    port: ymlconfig['port']
 }));
 
 function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
