@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "commander": "^2.6.0",
+    "js-yaml": "^3.6.0",
     "nodemailer": "*",
     "nodemailer-html-to-text": "^2.1.0",
     "nodemailer-smtp-transport": "*",
