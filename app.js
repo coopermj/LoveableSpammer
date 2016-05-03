@@ -139,24 +139,26 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
         // send mail with defined transport object
         transporter.sendMail(mailOptions, function(error, info){            
             var date = new Date();
-            if(error){
-                console.log(error);
-                var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")   
-                stmt.run(date, runNo, mailOptions['to'], error.responseCode, error.response);
-            }else{
-                var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")   
-                stmt.run(date, runNo, mailOptions['to'], 200, info.response);
-                
-                if (mailOptions['to'].toUpperCase() === mailOptions['from'].toUpperCase()) { // make it so I don't have to keep re-enabling myself
-                    console.log("Sending email to yourself, j0!")
-                }
-                else { 
-                    console.log("to: %s; from: %s", mailOptions['to'].toUpperCase(), mailOptions['from'].toUpperCase());
-                    var stmtUpdate = db.prepare("UPDATE maintargets SET status='no' WHERE name=? AND lastname=?")
-                    stmtUpdate.run(name,lastname)   
-                }
+            if (typeof program.to == 'undefined') {
+                if(error){
+                    console.log(error);
+                    var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")   
+                    stmt.run(date, runNo, mailOptions['to'], error.responseCode, error.response);
+                }else{
+                    var stmt = db.prepare("INSERT INTO runlog VALUES(?,?,?,?,?)")   
+                    stmt.run(date, runNo, mailOptions['to'], 200, info.response);
+                    
+                    if (mailOptions['to'].toUpperCase() === mailOptions['from'].toUpperCase()) { // make it so I don't have to keep re-enabling myself
+                        console.log("Sending email to yourself, j0!")
+                    }
+                    else { 
+                        console.log("to: %s; from: %s", mailOptions['to'].toUpperCase(), mailOptions['from'].toUpperCase());
+                        var stmtUpdate = db.prepare("UPDATE maintargets SET status='no' WHERE name=? AND lastname=?")
+                        stmtUpdate.run(name,lastname)   
+                    }
 
-                console.log('Message to ' + info.envelope.to + ' sent: ' + info.response);              
+                    console.log('Message to ' + info.envelope.to + ' sent: ' + info.response);              
+                }
             }
         });
 
