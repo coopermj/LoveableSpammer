@@ -11,7 +11,9 @@
   "dependencies": {
     "commander": "^2.6.0",
     "nodemailer": "*",
+    "nodemailer-html-to-text": "^2.1.0",
     "nodemailer-smtp-transport": "*",
+    "premailer-api": "^1.0.4",
     "sleep": "^1.2.0",
     "sqlite3": "*"
   }
