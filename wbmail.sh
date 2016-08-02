@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Example script for LoveableSpammer hook script to create customized/
+# personalized images to attach
+
+
 #name = ""
 #filename = ""
 
