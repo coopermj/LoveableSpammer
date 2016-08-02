@@ -2,6 +2,7 @@ var nodemailer = require('nodemailer');
 var smtpTransport = require('nodemailer-smtp-transport');
 var util = require('util')
 var sqlite3 = require('sqlite3').verbose();
+var emailify = require('emailify');
 var fs = require('fs');
 var program = require('commander');
 var sleep = require('sleep');
@@ -25,12 +26,13 @@ try {
 }
 
 program
-	.version('0.0.1')
+	.version('0.0.2')
 	.option('-s, --subject ["subject line"]', 'j0')
     .option('-f, --file <path>')
     .option('-m, --from <sender>')
 	.option('-a, --attach <items>', 'Attachments', attach)
     .option('-t, --to <recips>', 'Recipients')
+    .option('-h, --hook <hook>', 'External application to generate dynamic content')
     .parse(process.argv);
 
 if (typeof program.subject == 'undefined') {
@@ -73,33 +75,17 @@ if (typeof program.to == 'undefined') {
                 console.log("To %s recipient", recipCount)
             }
             else {
-                console.log('To %s recipients', recipCount);    
+                console.log('To %s recipients', recipCount); 
+                for (var i = 5; i >= 0; i--) {
+                    sleep.sleep(1)
+                    console.log('In %s seconds — press ctrl-c to cancel!', i);
+                };   
             }
             
-            for (var i = 5; i >= 0; i--) {
-                sleep.sleep(1)
-                console.log('In %s seconds — press ctrl-c to cancel!', i);
-            };
+            
         });
     });
 }
-
-if (typeof program.attach != 'undefined') {
-    var attachmentList = program.attach;
-
-    var i = 0
-    var attachmentObject = [];
-    attachmentList.forEach(function(value) {
-        // having the cid without the extension looks cleaner, I think, so
-        // let's not assume a 3 character extension
-        extension = path.extname(value); // find the extension name
-        var cidname = value.substring(0, value.indexOf(extension)); // find the location in the string and chop there
-        attachmentObject.push({filename: value, path: __dirname + '/' + value, cid: cidname})
-    });
-}
-
-
-console.log('ao: %j', attachmentObject)
 
 // create reusable transporter object using SMTP transport
 var transporter = nodemailer.createTransport(smtpTransport({
@@ -108,8 +94,11 @@ var transporter = nodemailer.createTransport(smtpTransport({
 }));
 
 function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
+
     // inline the css and send
-    premailer.prepare({ html: data }, function(err, email) {
+    emailify.parse({ data }, function(err, email) {
+    // premailer.prepare({ html: data }, function(err, email) {
+        // console.log('email: ' + email)
         var mailOptions = {
             from: 'Firstname Lastname <addr@domain.edu>', // sender address
             //to: util.format("%s %s <%s>", name, lastname, emailAddr), // list of receivers
@@ -117,14 +106,45 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             subject: program.subject, // Subject line
             //text: 'Where you put the plaintext body', // plaintext body
             //html: '<b>Hello world ✔</b>' // html body
-            html: email.html,
+            // html: email.html,
+            html: data
             //html: '<p><b> hellow, world </b> Here is a graphic: <img src="cid:grasschat"/></p>',
             //attachments: attachmentObject
         };
-
-
+//"/Users/coopermj/Dropbox/mailer/LoveableSpammer/hookout/Micah_Cooper.png"
+        var attachmentObject = [];
 
         if (typeof program.attach != 'undefined') {
+            var attachmentList = program.attach;
+
+            var i = 0
+            
+            attachmentList.forEach(function(value) {
+                // having the cid without the extension looks cleaner, I think, so
+                // let's not assume a 3 character extension
+                extension = path.extname(value); // find the extension name
+                var cidname = value.substring(0, value.indexOf(extension)); // find the location in the string and chop there
+                attachmentObject.push({filename: value, path: __dirname + '/' + value, cid: cidname})
+            });
+        }
+
+        console.log('ao: %j', attachmentObject)
+
+
+
+        if (typeof program.hook != 'undefined') {
+            //var tmpfile = mailOptions['to'] + '.png'
+            var execSync = require('child_process').execSync;
+            var hookcmd = program.hook + ' ' + name + ' ' + lastname;
+            var imgname = execSync(hookcmd, { encoding: 'utf8' });
+            imgname = imgname.replace(/\n$/, '')
+            console.log('img name: ' + imgname)
+            attachmentObject.push({filename: imgname, path: __dirname + '/' + imgname, cid: 'hook'})
+        }
+
+        console.log(attachmentObject);
+
+        if ( (typeof program.attach != 'undefined') || (typeof program.hook != 'undefined') ) {
             //mailOptions.attachments = attachmentObject;
             mailOptions['attachments'] = attachmentObject
         }
@@ -135,12 +155,16 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             mailOptions['to'] = program.to;
         }
 
+
+
         if (typeof program.from == 'undefined') {
             process.exit(1);
             //mailOptions.to = util.format("%s %s <%s>", name, lastname, emailAddr), // list of receivers
         } else {
             mailOptions['from'] = program.from;
         }
+
+
 
         // set up to use htmlToText to make the plaintext version automatically
         transporter.use('compile', htmlToText());
@@ -170,10 +194,14 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             }
         });
 
-
     });
 
-
+// Messy way of handling removing our hook attachment. :/
+    // if (typeof program.hook != 'undefined') {
+    //     attachmentObject.pop();
+    //     console.log('pop pop pop')
+    //     console.log(attachmentObject)
+    // } 
     
 }
 
@@ -185,7 +213,7 @@ if (typeof program.to == 'undefined') {
     			console.log('Failed to create runlog table');
     		}
     		else {
-    			console.log('done?')
+    			// console.log('done?')
     		}
     	});
 
@@ -195,7 +223,7 @@ if (typeof program.to == 'undefined') {
     		runmax = row.runmax;
 
     		runNo = runmax + 1;
-    		console.log('hi')
+    		// console.log('hi')
     	});
 
     	fs.readFile(contentFilename, 'utf8', function (err, data) { // read the html file in once
