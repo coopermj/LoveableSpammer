@@ -49,3 +49,21 @@ you can add as many as you'd like and have corresponding cids for the ones you w
 ### Tokens ###
 
 In your HTML file, you can use the following tokens and they will be replaced with text from your database: {{name}}, {{last name}}, {{bldg}}, {{dept}}. If you look at the code, you can see that adding or changing tokens should be straightforward.
+
+### Hook ###
+
+If you have a script to personalize an attachment, such as an image, you can execute this script out of LoveableSpammer using the -h option and it will pass in first name and last name as command line arguments and take the results of the script as the attachment filename.
+
+Example:
+
+`node app.js -s "Please read my email" -f awesome.html -a joy.jpg,monkey.jpg -h webdr.sh`
+
+### All Options ###
+
+	* -s, --subject ["subject line"]'
+    * -f, --file <path>
+    * -m, --from <sender>: Must be in the format "First Last <firstlast@domain.com>"
+	* -a, --attach <items>, 'Attachments'
+    * -t, --to <recips>, 'Recipients'
+    * -h, --hook <hook>, 'External application to generate dynamic content'
+
