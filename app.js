@@ -9,6 +9,7 @@ var sleep = require('sleep');
 var path = require('path')
 var premailer = require('premailer-api') // this should inline our css automatically
 var htmlToText = require('nodemailer-html-to-text').htmlToText;
+var async = require('async');
 yaml = require('js-yaml');
 
 var db = new sqlite3.Database('uit.db');
@@ -228,12 +229,36 @@ if (typeof program.to == 'undefined') {
 
     	fs.readFile(contentFilename, 'utf8', function (err, data) { // read the html file in once
     		
-    		db.each ('SELECT name, lastname, emailAddr, dept, bldg FROM maintargets WHERE status = "go"', function(err, row) {
+    		db.each ('SELECT * FROM maintargets WHERE status = "go"', function(err, row) {
+                // console.log(typeof row);
+                // console.log(row);
                 var thisdata = data; // separate the data
-                thisdata = thisdata.replace(/{{name}}/gi, row.name);
-                thisdata = thisdata.replace(/{{lastname}}/gi, row.lastname);
-                thisdata = thisdata.replace(/{{dept}}/gi, row.dept);
-                thisdata = thisdata.replace(/{{bldg}}/gi, row.bldg);
+
+                async.forEachOf(Object.keys(row), function (item, key, callback){
+                    console.log(item);
+                    console.log(row[item]);
+
+                    // Build our replacement string
+                    replstr = '{{' + item + '}}';
+                    // And our RegExp object
+                    var reg = new RegExp(replstr, "gi");
+
+                    // Replace all instances with the updated data
+                    thisdata = thisdata.replace(reg, row[item]);
+
+                    callback();
+
+                }, function(err) {
+                    console.log('iterating done');
+                    console.log(thisdata);
+                });
+
+                console.log('and specifically:');
+                // row.forEach(function(value){
+    		     //    console.log(value);
+                // })
+
+                var thisdata = data; // separate the data
 
     			sendPersonalEmail(runNo, row.name, row.lastname, row.emailAddr, thisdata);
     		});

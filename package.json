@@ -9,7 +9,9 @@
     "url": "http://alexyoung.org"
   },
   "dependencies": {
+    "async": "^2.3.0",
     "commander": "^2.6.0",
+    "emailify": "0.0.3",
     "js-yaml": "^3.6.0",
     "nodemailer": "*",
     "nodemailer-html-to-text": "^2.1.0",
