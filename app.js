@@ -10,6 +10,7 @@ var path = require('path')
 var premailer = require('premailer-api') // this should inline our css automatically
 var htmlToText = require('nodemailer-html-to-text').htmlToText;
 var async = require('async');
+var marked = require('marked');
 yaml = require('js-yaml');
 
 var db = new sqlite3.Database('uit.db');
@@ -35,6 +36,17 @@ program
     .option('-t, --to <recips>', 'Recipients')
     .option('-h, --hook <hook>', 'External application to generate dynamic content')
     .parse(process.argv);
+
+marked.setOptions({
+    renderer: new marked.Renderer(),
+    gfm: true,
+    tables: true,
+    breaks: false,
+    pedantic: false,
+    sanitize: false,
+    smartLists: true,
+    smartypants: false
+});
 
 if (typeof program.subject == 'undefined') {
     console.log('No subject — exiting');
@@ -95,6 +107,44 @@ var transporter = nodemailer.createTransport(smtpTransport({
 }));
 
 function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
+
+    // pull in any referenced markdown files
+    // any thing in our source html that is set off like !-@-filename.md-@-!
+    // will be replaced with the contents of filename.md parsed into html
+    replstr = '!-@-(.*)-@-!'
+    var reg = new RegExp(replstr, "gi");
+    // Replace all instances with the updated data
+    var results = data.match(reg);
+
+    async.each(results, function (result, callback){
+        console.log('result: ' + result)
+
+        mdstr = '!-@-(.*)-@-!'
+        var mdreg = new RegExp(mdstr, "gi");
+        var mdfilenames = mdreg.exec(result)
+        var mdfile = mdfilenames[1]
+        var mdstring = mdfilenames[0]
+        //console.log('mdfilename: ' + mdfile)
+        //console.log('mdstring: ' + mdstring)
+
+        fs.readFile(mdfile, 'utf8', function (err, mdfiledata) { // read the html file in once
+            var mdcontents = marked(mdfiledata)
+            //console.log(mdcontents)
+            data = data.replace(mdstring, mdcontents)
+            //console.log(data)
+
+
+        })
+        callback()
+
+    }, 
+    function(err){
+        // all done
+    });
+
+
+
+
 
     // inline the css and send
     emailify.parse({ data }, function(err, email) {
