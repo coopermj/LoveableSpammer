@@ -116,13 +116,13 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
     // Replace all instances with the updated data
     var results = data.match(reg);
 
-    async.each(results, function (result, callback){
-        console.log('result: ' + result)
-
-        mdstr = '!-@-(.*)-@-!'
+    // for each result, get the filename and open the file and replace the tag with the file content
+    async.mapSeries(results, function (result, callback){ 
+        mdstr = '!-@-(.*)-@-!' // !-@-markdownfile.md-@-!
         var mdreg = new RegExp(mdstr, "gi");
         var mdfilenames = mdreg.exec(result)
         var mdfile = mdfilenames[1]
+        console.log('Pulling in: ' + mdfile)
         var mdstring = mdfilenames[0]
         //console.log('mdfilename: ' + mdfile)
         //console.log('mdstring: ' + mdstring)
@@ -132,18 +132,20 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             //console.log(mdcontents)
             data = data.replace(mdstring, mdcontents)
             //console.log(data)
-
-
         })
         callback()
 
     }, 
-    function(err){
+    function(err, results){
+        // console.log("I got here")
+        if (err) {
+            console.log("Error: ", err)  
+            process.exit(1);  
+        } else {
+            // console.log(data)
+        }
         // all done
     });
-
-
-
 
 
     // inline the css and send
@@ -245,7 +247,7 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             }
         });
 
-    });
+    })
 
 // Messy way of handling removing our hook attachment. :/
     // if (typeof program.hook != 'undefined') {
@@ -303,7 +305,7 @@ if (typeof program.to == 'undefined') {
                     console.log(thisdata);
                 });
 
-                console.log('and specifically:');
+                // console.log('and specifically:');
                 // row.forEach(function(value){
     		     //    console.log(value);
                 // })
