@@ -108,45 +108,49 @@ var transporter = nodemailer.createTransport(smtpTransport({
 
 function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
 
-    // pull in any referenced markdown files
-    // any thing in our source html that is set off like !-@-filename.md-@-!
-    // will be replaced with the contents of filename.md parsed into html
-    replstr = '!-@-(.*)-@-!'
+
+    var str = "The quick brown fox jumped over the box like an ox with a sox in its mouth";
+
+    str.match(/\w(ox)/g); // ["fox", "box", "sox"]
+
+    // match (when used with a 'g' flag) returns an Array with all matches found
+    // if you don't use the 'g' flag then it acts the same as the 'exec' method.
+
+    str.match(/\w(ox)/); // ["fox", "ox"]
+    /\w(ox)/.exec(str);  // ["fox", "ox"]
+
+    // the exec method returns an Array where the first index is the match and all other indexes are capturing groups
+    // note: adding a 'g' flag has no effect on the returned Array
+
+    /\w(ox)/g.exec(str);  // ["fox", "ox"]
+
+    // although you can use a while loop with the exec method to find successive matches
+
+
+    var myString = "something format_abc something format_abc something format_abc";
+    var replstr = '!-@-(.*)-@-!'
     var reg = new RegExp(replstr, "gi");
-    // Replace all instances with the updated data
-    var results = data.match(reg);
+    // var myRegexp = /(?:^|\s)format_(.*?)(?:\s|$)/g;
+    match = reg.exec(data);
+    while (match != null) {
+      // matched text: match[0]
+      // match start: match.index
+      // capturing group n: match[n]
+      var regstr = match[0]
+      var mdfile = match[1]
+      // console.log(regstr)
+      // console.log(mdfile)
+      // console.log(match.index)
+      // console.log(reg.lastIndex)
 
-    // for each result, get the filename and open the file and replace the tag with the file content
-    async.mapSeries(results, function (result, callback){ 
-        mdstr = '!-@-(.*)-@-!' // !-@-markdownfile.md-@-!
-        var mdreg = new RegExp(mdstr, "gi");
-        var mdfilenames = mdreg.exec(result)
-        var mdfile = mdfilenames[1]
-        console.log('Pulling in: ' + mdfile)
-        var mdstring = mdfilenames[0]
-        //console.log('mdfilename: ' + mdfile)
-        //console.log('mdstring: ' + mdstring)
+      var mddata = fs.readFileSync(mdfile, 'utf8')
+      var mdrendered = marked(mddata)
+      // console.log(mdrendered)
+      data = data.replace(regstr, mdrendered)
 
-        fs.readFile(mdfile, 'utf8', function (err, mdfiledata) { // read the html file in once
-            var mdcontents = marked(mdfiledata)
-            //console.log(mdcontents)
-            data = data.replace(mdstring, mdcontents)
-            //console.log(data)
-        })
-        callback()
 
-    }, 
-    function(err, results){
-        // console.log("I got here")
-        if (err) {
-            console.log("Error: ", err)  
-            process.exit(1);  
-        } else {
-            // console.log(data)
-        }
-        // all done
-    });
-
+      match = reg.exec(data);
+    }
 
     // inline the css and send
     emailify.parse({ data }, function(err, email) {
@@ -175,8 +179,10 @@ function sendPersonalEmail(runNo, name, lastname, emailAddr, data) {
             attachmentList.forEach(function(value) {
                 // having the cid without the extension looks cleaner, I think, so
                 // let's not assume a 3 character extension
-                extension = path.extname(value); // find the extension name
-                var cidname = value.substring(0, value.indexOf(extension)); // find the location in the string and chop there
+                // extension = path.extname(value); // find the extension name
+                // var cidname = value.substring(0, value.indexOf(extension)); // find the location in the string and chop there
+                // Changed my mind – let's leave the extension on the cid name
+                cidname = value
                 attachmentObject.push({filename: value, path: __dirname + '/' + value, cid: cidname})
             });
         }
@@ -280,6 +286,10 @@ if (typeof program.to == 'undefined') {
     	});
 
     	fs.readFile(contentFilename, 'utf8', function (err, data) { // read the html file in once
+            if(err) {
+                console.log('unable to read file: ', mdfile)
+                process.exit(1)
+            }
     		
     		db.each ('SELECT * FROM maintargets WHERE status = "go"', function(err, row) {
                 // console.log(typeof row);
